@@ -12,6 +12,10 @@ DATASET = digits
 N_COMPONENTS = 11
 N_CLUSTERS = 10
 MODE = "report"
+EXPERIMENT = 'compute_time'
+
+# General Options
+TITLE = 'Neural Network Classifier'
 
 pca = decomposition.PCA(N_COMPONENTS)
 new_data = pca.fit_transform(DATASET.training_features)
@@ -67,34 +71,60 @@ elif MODE == "report":
 
     print(final_out)
 
-# General Options
-TITLE = 'Neural Network Classifier'
-LAYERS_TOPOLOGY = (30,)
+if EXPERIMENT == 'learning':
+    classifier = neural_network.MLPClassifier()
 
-# Final Report Options
-LEARNING_RATE = 1e-2
-TOLERANCE = 1e-4
+    plot_x = []
+    plot_y_testing = []
+    plot_y_mean = []
 
-classifier = neural_network.MLPClassifier()
+    train_sizes = np.linspace(0.1, 0.9, 30)
 
-plot_x = []
-plot_y_testing = []
-plot_y_mean = []
+    train_size_abs, train_scores, test_scores = model_selection.learning_curve(classifier, new_data, DATASET.training_labels,
+        cv=10, train_sizes=train_sizes)
 
-train_sizes = np.linspace(0.1, 0.9, 30)
+    train_losses = [1 - np.array(a).mean() for a in train_scores]
+    test_losses = [1 - np.array(a).mean() for a in test_scores]
 
-train_size_abs, train_scores, test_scores = model_selection.learning_curve(classifier, new_data, DATASET.training_labels,
-    cv=10, train_sizes=train_sizes)
+    plt.figure()
+    plt.grid()
+    plt.xlabel('Training Set Size')
+    plt.ylabel('Loss')
+    plt.title(TITLE)
+    plt.plot(train_size_abs, train_losses)
+    plt.plot(train_size_abs, test_losses)
+    plt.legend(['Training', 'Testing'])
+    plt.show()
+elif EXPERIMENT == 'compute_time':
+    plot_x = []
+    plot_y_scoring = []
+    plot_y_fitting = []
 
-train_losses = [1 - np.array(a).mean() for a in train_scores]
-test_losses = [1 - np.array(a).mean() for a in test_scores]
+    for training_fraction in np.linspace(0.1, 0.9, 10):
+        training_size = int(len(new_data) * training_fraction)
+        print("Computing score for training_size = {} ...".format(training_size))
+        classifier = neural_network.MLPClassifier()
 
-plt.figure()
-plt.grid()
-plt.xlabel('Training Set Size')
-plt.ylabel('Loss')
-plt.title(TITLE)
-plt.plot(train_size_abs, train_losses)
-plt.plot(train_size_abs, test_losses)
-plt.legend(['Training', 'Testing'])
-plt.show()
+        result = model_selection.cross_validate(
+                classifier, 
+                new_data[:training_size],
+                DATASET.training_labels[:training_size],
+                cv=10, return_train_score=True)
+        test_score = result['test_score']
+        train_score = result['train_score']
+        fit_time = result['fit_time']
+        score_time = result['score_time']
+
+        plot_x.append(training_size)
+        plot_y_scoring.append(np.array(score_time).mean())
+        plot_y_fitting.append(np.array(fit_time).mean())
+    
+    plt.figure()
+    plt.grid()
+    plt.xlabel('Set Size')
+    plt.ylabel('Compute time in seconds')
+    plt.title(TITLE)
+    plt.plot(plot_x, plot_y_scoring)
+    plt.plot(plot_x, plot_y_fitting)
+    plt.legend(['Scoring', 'Fitting'])
+    plt.show()
