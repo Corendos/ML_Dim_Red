@@ -5,19 +5,27 @@ sys.path.append(os.path.join(os.getcwd(), os.pardir))
 
 from datasets import digits, phoneme
 from sklearn import decomposition, cluster, metrics, neural_network, model_selection
+from math import sqrt
 import matplotlib.pyplot as plt
 import numpy as np
 
-DATASET = digits
-N_COMPONENTS = 19
-N_CLUSTERS = 10
+def vector_distance(x, y):
+    d = [y[i] - x[i] for i in range(len(x))]
+    s = 0
+    for i in range(len(d)):
+        s += d[i]*d[i]
+    return sqrt(s)
+
+DATASET = phoneme
+N_COMPONENTS = 4
+N_CLUSTERS = 2
 MODE = "report"
-EXPERIMENT = 'nothing'
+EXPERIMENT = 'reconstruction'
 
 # General Options
 TITLE = 'Neural Network Classifier'
 
-ica = decomposition.FastICA(N_COMPONENTS, max_iter=10000)
+ica = decomposition.FastICA(N_COMPONENTS, max_iter=100000, tol=4.8e-4)
 new_data = ica.fit_transform(DATASET.training_features)
 print(ica.components_)
 
@@ -129,3 +137,19 @@ elif EXPERIMENT == 'compute_time':
     plt.plot(plot_x, plot_y_fitting)
     plt.legend(['Scoring', 'Fitting'])
     plt.show()
+elif EXPERIMENT == 'reconstruction':
+    inverse_new_data = ica.inverse_transform(new_data)
+    max_distance = 0
+    max_index = 0
+    average_distance = 0
+    for i in range(len(DATASET.training_features)):
+        original = DATASET.training_features[i]
+        reconstructed = inverse_new_data[i]
+        d = vector_distance(original, reconstructed)
+        average_distance += d
+        if d > max_distance:
+            max_distance = d
+            max_index = i
+        average_distance /= len(DATASET.training_features)
+    print(max_distance)
+    print(average_distance)
