@@ -20,9 +20,9 @@ def image_from_features(features):
     image = [[features[y * 8 + x] for x in range(7)] for y in range(8)]
     return image
 
-DATASET = digits
-N_COMPONENTS = 19
-N_CLUSTERS = 10
+DATASET = phoneme
+N_COMPONENTS = 4
+N_CLUSTERS = 2
 MODE = "nothing"
 EXPERIMENT = 'reconstruction'
 
