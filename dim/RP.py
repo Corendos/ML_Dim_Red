@@ -4,7 +4,7 @@ import sys
 sys.path.append(os.path.join(os.getcwd(), os.pardir))
 
 from datasets import digits, phoneme
-from sklearn import decomposition, cluster, metrics, neural_network, model_selection
+from sklearn import random_projection, cluster, metrics, neural_network, model_selection
 from math import sqrt
 import matplotlib.pyplot as plt
 import numpy as np
@@ -20,17 +20,17 @@ def image_from_features(features):
     image = [[features[y * 8 + x] for x in range(7)] for y in range(8)]
     return image
 
-DATASET = phoneme
-N_COMPONENTS = 4
-N_CLUSTERS = 2
-MODE = "nothing"
-EXPERIMENT = 'learning'
+DATASET = digits
+N_COMPONENTS = 19
+N_CLUSTERS = 10
+MODE = "pretty"
+EXPERIMENT = 'nothing'
 
 # General Options
 TITLE = 'Neural Network Classifier'
 
-pca = decomposition.PCA(N_COMPONENTS)
-new_data = pca.fit_transform(DATASET.training_features)
+rp = random_projection.GaussianRandomProjection(n_components=N_COMPONENTS)
+new_data = rp.fit_transform(DATASET.training_features)
 
 report = {}
 labels = []
