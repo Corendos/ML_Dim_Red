@@ -4,7 +4,7 @@ import sys
 sys.path.append(os.path.join(os.getcwd(), os.pardir))
 
 from datasets import digits, phoneme
-from sklearn import decomposition, cluster, metrics, neural_network, model_selection
+from sklearn import discriminant_analysis, cluster, metrics, neural_network, model_selection
 from math import sqrt
 import matplotlib.pyplot as plt
 import numpy as np
@@ -19,15 +19,14 @@ def vector_distance(x, y):
 DATASET = digits
 N_COMPONENTS = 19
 N_CLUSTERS = 10
-MODE = "nothing"
-EXPERIMENT = 'compute_time'
+MODE = "pretty"
+EXPERIMENT = 'nothing'
 
 # General Options
 TITLE = 'Neural Network Classifier'
 
-ica = decomposition.FastICA(N_COMPONENTS, max_iter=100000, tol=4.8e-4)
-new_data = ica.fit_transform(DATASET.training_features)
-print(ica.components_)
+lda = discriminant_analysis.LinearDiscriminantAnalysis(N_COMPONENTS)
+new_data = lda.fit_transform(DATASET.training_features)
 
 report = {}
 labels = []

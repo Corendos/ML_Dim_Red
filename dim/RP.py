@@ -20,14 +20,15 @@ def image_from_features(features):
     image = [[features[y * 8 + x] for x in range(7)] for y in range(8)]
     return image
 
-DATASET = digits
-N_COMPONENTS = 19
-N_CLUSTERS = 10
-MODE = "pretty"
-EXPERIMENT = 'nothing'
+DATASET = phoneme
+N_COMPONENTS = 4
+N_CLUSTERS = 2
+MODE = "nothing"
+EXPERIMENT = 'learning'
 
 # General Options
 TITLE = 'Neural Network Classifier'
+N_REPEAT = 2
 
 rp = random_projection.GaussianRandomProjection(n_components=N_COMPONENTS)
 new_data = rp.fit_transform(DATASET.training_features)
@@ -82,42 +83,60 @@ elif MODE == "report":
         final_out += out
 
     print(final_out)
+elif MODE == 'compare':
+    success = 0
+    for i in range(1000):
+        if i % 50 == 0:
+            print("{}/{}".format(i, 1000))
+        rp = random_projection.GaussianRandomProjection(n_components=N_COMPONENTS)
+        new_data = rp.fit_transform(DATASET.training_features)
+        kmeans = cluster.KMeans(n_clusters=N_CLUSTERS)
+        kmeans.fit(new_data)
+        count = {}
+        for i, c in enumerate(kmeans.labels_):
+            if c not in count:
+                count[c] = {}
+            if DATASET.training_labels[i] not in count[c]:
+                count[c][DATASET.training_labels[i]] = 1
+            else:
+                count[c][DATASET.training_labels[i]] += 1
+        
+        maxima = []
+        for key, value in count.items():
+            maxima.append(max(value, key=value.get))
+        maxima = set(maxima)
+        if len(maxima) == 10:
+            success += 1
+    print(success)
 
 if EXPERIMENT == 'learning':
-    classifier_pca = neural_network.MLPClassifier()
-    classifier = neural_network.MLPClassifier()
+    test_scores = np.array([])
+    train_scores = np.array([])
+    test_scores_rp = np.array([])
+    train_scores_rp = np.array([])
 
-    plot_x = []
-    plot_y_testing = []
-    plot_y_mean = []
+    for i in range(N_REPEAT):
+        if i % 50 == 0:
+            print("{}/{}".format(i, N_REPEAT))
+        classifier = neural_network.MLPClassifier()
+        classifier_rp = neural_network.MLPClassifier()
 
-    train_sizes = np.linspace(0.1, 0.9, 30)
+        _, train, test = model_selection.learning_curve(
+            classifier, DATASET.training_features, DATASET.training_labels,
+            cv=10, train_sizes=[1.0])
 
-    train_size_abs, train_scores, test_scores = model_selection.learning_curve(
-        classifier, DATASET.training_features, DATASET.training_labels,
-        cv=10, train_sizes=train_sizes)
+        _, train_rp, test_rp = model_selection.learning_curve(
+            classifier_rp, new_data, DATASET.training_labels,
+            cv=10, train_sizes=[1.0])
+        
+        test_scores = np.append(test_scores, [test])
+        train_scores = np.append(train_scores, [train])
 
-    train_size_abs_pca, train_scores_pca, test_scores_pca = model_selection.learning_curve(
-        classifier_pca, new_data, DATASET.training_labels,
-        cv=10, train_sizes=train_sizes)
+        test_scores_rp = np.append(test_scores_rp, [test_rp])
+        train_scores_rp = np.append(train_scores_rp, [train_rp])
 
-    train_losses = [1 - np.array(a).mean() for a in train_scores]
-    test_losses = [1 - np.array(a).mean() for a in test_scores]
-
-    train_losses_pca = [1 - np.array(a).mean() for a in train_scores_pca]
-    test_losses_pca = [1 - np.array(a).mean() for a in test_scores_pca]
-
-    plt.figure()
-    plt.grid()
-    plt.xlabel('Training Set Size')
-    plt.ylabel('Loss')
-    plt.title(TITLE)
-    plt.plot(train_size_abs, train_losses)
-    plt.plot(train_size_abs, test_losses)
-    plt.plot(train_size_abs_pca, train_losses_pca)
-    plt.plot(train_size_abs_pca, test_losses_pca)
-    plt.legend(['Training original', 'Testing original', 'Training PCA', 'Testing PCA'])
-    plt.show()
+    print("Original: Test: {}    Train: {}".format(test_scores.mean(), train_scores.mean()))
+    print("RP:       Test: {}    Train: {}".format(test_scores_rp.mean(), train_scores_rp.mean()))
 elif EXPERIMENT == 'compute_time':
     plot_x = []
     plot_y_scoring = []
@@ -169,19 +188,3 @@ elif EXPERIMENT == 'compute_time':
     plt.plot(plot_x, plot_y_fitting_pca)
     plt.legend(['Scoring', 'Fitting', 'Scoring PCA', 'Fitting PCA'])
     plt.show()
-elif EXPERIMENT == 'reconstruction':
-    inverse_new_data = pca.inverse_transform(new_data)
-    max_distance = 0
-    max_index = 0
-    average_distance = 0
-    for i in range(len(DATASET.training_features)):
-        original = DATASET.training_features[i]
-        reconstructed = inverse_new_data[i]
-        d = vector_distance(original, reconstructed)
-        average_distance += d
-        if d > max_distance:
-            max_distance = d
-            max_index = i
-        average_distance /= len(DATASET.training_features)
-    print(max_distance)
-    print(average_distance)
