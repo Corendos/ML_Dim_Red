@@ -28,7 +28,10 @@ EXPERIMENT = 'learning'
 
 # General Options
 TITLE = 'Neural Network Classifier'
-N_REPEAT = 2
+N_REPEAT = 10
+LEARNING_RATE = 1e-1
+TOLERANCE = 1e-4
+TOPOLOGY = (3,)
 
 rp = random_projection.GaussianRandomProjection(n_components=N_COMPONENTS)
 new_data = rp.fit_transform(DATASET.training_features)
@@ -118,8 +121,14 @@ if EXPERIMENT == 'learning':
     for i in range(N_REPEAT):
         if i % 50 == 0:
             print("{}/{}".format(i, N_REPEAT))
-        classifier = neural_network.MLPClassifier()
-        classifier_rp = neural_network.MLPClassifier()
+        classifier = neural_network.MLPClassifier(
+            learning_rate_init=LEARNING_RATE,
+            tol=TOLERANCE,
+            hidden_layer_sizes=TOPOLOGY)
+        classifier_rp = neural_network.MLPClassifier(
+            learning_rate_init=LEARNING_RATE,
+            tol=TOLERANCE,
+            hidden_layer_sizes=TOPOLOGY)
 
         _, train, test = model_selection.learning_curve(
             classifier, DATASET.training_features, DATASET.training_labels,

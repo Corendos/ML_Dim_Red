@@ -20,10 +20,13 @@ DATASET = digits
 N_COMPONENTS = 19
 N_CLUSTERS = 10
 MODE = "nothing"
-EXPERIMENT = 'compute_time'
+EXPERIMENT = 'learning'
 
 # General Options
 TITLE = 'Neural Network Classifier'
+LEARNING_RATE = 1e-2
+TOLERANCE = 1e-4
+TOPOLOGY = (30,)
 
 ica = decomposition.FastICA(N_COMPONENTS, max_iter=100000, tol=4.8e-4)
 new_data = ica.fit_transform(DATASET.training_features)
@@ -81,8 +84,14 @@ elif MODE == "report":
     print(final_out)
 
 if EXPERIMENT == 'learning':
-    classifier_ica = neural_network.MLPClassifier()
-    classifier = neural_network.MLPClassifier()
+    classifier_ica = neural_network.MLPClassifier(
+        learning_rate_init=LEARNING_RATE,
+        tol=TOLERANCE,
+        hidden_layer_sizes=TOPOLOGY)
+    classifier = neural_network.MLPClassifier(
+        learning_rate_init=LEARNING_RATE,
+        tol=TOLERANCE,
+        hidden_layer_sizes=TOPOLOGY)
 
     plot_x = []
     plot_y_testing = []
@@ -125,16 +134,22 @@ elif EXPERIMENT == 'compute_time':
     for training_fraction in np.linspace(0.1, 0.9, 10):
         training_size = int(len(new_data) * training_fraction)
         print("Computing score for training_size = {} ...".format(training_size))
-        classifier = neural_network.MLPClassifier(max_iter=1000)
-        classifier_pca = neural_network.MLPClassifier(max_iter=1000)
+        classifier_ica = neural_network.MLPClassifier(
+            learning_rate_init=LEARNING_RATE,
+            tol=TOLERANCE,
+            hidden_layer_sizes=TOPOLOGY)
+        classifier = neural_network.MLPClassifier(
+            learning_rate_init=LEARNING_RATE,
+            tol=TOLERANCE,
+            hidden_layer_sizes=TOPOLOGY)
 
         result = model_selection.cross_validate(
                 classifier, 
                 DATASET.training_features[:training_size],
                 DATASET.training_labels[:training_size],
                 cv=10, return_train_score=True)
-        result_pca = model_selection.cross_validate(
-                classifier_pca, 
+        result_ica = model_selection.cross_validate(
+                classifier_ica, 
                 new_data[:training_size],
                 DATASET.training_labels[:training_size],
                 cv=10, return_train_score=True)

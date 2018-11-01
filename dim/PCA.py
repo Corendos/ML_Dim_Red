@@ -24,10 +24,13 @@ DATASET = phoneme
 N_COMPONENTS = 4
 N_CLUSTERS = 2
 MODE = "nothing"
-EXPERIMENT = 'learning'
+EXPERIMENT = 'compute_time'
 
 # General Options
 TITLE = 'Neural Network Classifier'
+LEARNING_RATE = 1e-1
+TOLERANCE = 1e-4
+TOPOLOGY = (3,)
 
 pca = decomposition.PCA(N_COMPONENTS)
 new_data = pca.fit_transform(DATASET.training_features)
@@ -84,8 +87,14 @@ elif MODE == "report":
     print(final_out)
 
 if EXPERIMENT == 'learning':
-    classifier_pca = neural_network.MLPClassifier()
-    classifier = neural_network.MLPClassifier()
+    classifier_pca = neural_network.MLPClassifier(
+        learning_rate_init=LEARNING_RATE,
+        tol=TOLERANCE,
+        hidden_layer_sizes=TOPOLOGY)
+    classifier = neural_network.MLPClassifier(
+        learning_rate_init=LEARNING_RATE,
+        tol=TOLERANCE,
+        hidden_layer_sizes=TOPOLOGY)
 
     plot_x = []
     plot_y_testing = []
@@ -128,8 +137,14 @@ elif EXPERIMENT == 'compute_time':
     for training_fraction in np.linspace(0.1, 0.9, 10):
         training_size = int(len(new_data) * training_fraction)
         print("Computing score for training_size = {} ...".format(training_size))
-        classifier = neural_network.MLPClassifier()
-        classifier_pca = neural_network.MLPClassifier()
+        classifier_pca = neural_network.MLPClassifier(
+            learning_rate_init=LEARNING_RATE,
+            tol=TOLERANCE,
+            hidden_layer_sizes=TOPOLOGY)
+        classifier = neural_network.MLPClassifier(
+            learning_rate_init=LEARNING_RATE,
+            tol=TOLERANCE,
+            hidden_layer_sizes=TOPOLOGY)
 
         result = model_selection.cross_validate(
                 classifier, 
