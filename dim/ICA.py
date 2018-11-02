@@ -19,8 +19,7 @@ def vector_distance(x, y):
 DATASET = digits
 N_COMPONENTS = 19
 N_CLUSTERS = 10
-MODE = "nothing"
-EXPERIMENT = 'learning'
+MODE = 'learning'
 
 # General Options
 TITLE = 'Neural Network Classifier'
@@ -49,41 +48,20 @@ for i, c in enumerate(kmeans.labels_):
     else:
         report[c][real_label] += 1
 
-if MODE == "pretty":
-    for key in sorted(report):
-        value = report[key]
-        print("Cluster #{}".format(key))
-        max_label_count = 0
-        max_label = 0
-        for key2 in sorted(value):
-            value2 = value[key2]
-            if value2 > max_label_count:
-                max_label_count = value2
-                max_label = key2
-            print("\tLabel {}: {} instance(s)".format(key2, value2))
-        print("\tMost instances for label {}\n".format(max_label))
-elif MODE == "report":
-    final_out = ""
-    for key in sorted(report):
-        value = report[key]
-        out = [str(key)]
-        max_instance_count = 0
-        max_label = None
-        for label in sorted(labels):
-            if label in value.keys():
-                out.append(str(value[label]))
-                if value[label] > max_instance_count:
-                    max_instance_count = value[label]
-                    max_label = label
-            else:
-                out.append('0')
-        out.append(str(max_label))
-        out = ' & '.join(out) + "\\\\ \\hline \n"
-        final_out += out
+for key in sorted(report):
+    value = report[key]
+    print("Cluster #{}".format(key))
+    max_label_count = 0
+    max_label = 0
+    for key2 in sorted(value):
+        value2 = value[key2]
+        if value2 > max_label_count:
+            max_label_count = value2
+            max_label = key2
+        print("\tLabel {}: {} instance(s)".format(key2, value2))
+    print("\tMost instances for label {}\n".format(max_label))
 
-    print(final_out)
-
-if EXPERIMENT == 'learning':
+if MODE == 'learning':
     classifier_ica = neural_network.MLPClassifier(
         learning_rate_init=LEARNING_RATE,
         tol=TOLERANCE,
@@ -124,7 +102,7 @@ if EXPERIMENT == 'learning':
     plt.plot(train_size_abs_ica, test_losses_ica)
     plt.legend(['Training original', 'Testing original', 'Training ICA', 'Testing ICA'])
     plt.show()
-elif EXPERIMENT == 'compute_time':
+elif MODE == 'compute_time':
     plot_x = []
     plot_y_scoring = []
     plot_y_fitting = []
@@ -181,7 +159,7 @@ elif EXPERIMENT == 'compute_time':
     plt.plot(plot_x, plot_y_fitting_pca)
     plt.legend(['Scoring', 'Fitting', 'Scoring ICA', 'Fitting ICA'])
     plt.show()
-elif EXPERIMENT == 'reconstruction':
+elif MODE == 'reconstruction':
     inverse_new_data = ica.inverse_transform(new_data)
     max_distance = 0
     max_index = 0

@@ -4,7 +4,7 @@ import sys
 sys.path.append(os.path.join(os.getcwd(), os.pardir))
 
 from datasets import digits, phoneme
-from sklearn import random_projection, cluster, metrics, neural_network, model_selection
+from sklearn import decomposition, cluster, metrics, neural_network, model_selection
 from math import sqrt
 import matplotlib.pyplot as plt
 import numpy as np
@@ -16,11 +16,11 @@ def vector_distance(x, y):
         s += d[i]*d[i]
     return sqrt(s)
 
-DATASET = phoneme
+DATASET = digits
 N_LABELS = 10
-N_COMPONENTS = 4
-N_CLUSTERS = 2
-MODE = 'learning'
+N_COMPONENTS = 19
+N_CLUSTERS = 10
+MODE = 'nothing'
 
 # General Options
 TITLE = 'Neural Network Classifier'
@@ -29,8 +29,8 @@ LEARNING_RATE = 1e-1
 TOLERANCE = 1e-4
 TOPOLOGY = (3,)
 
-rp = random_projection.GaussianRandomProjection(n_components=N_COMPONENTS)
-new_data = rp.fit_transform(DATASET.training_features)
+fa = decomposition.FactorAnalysis(n_components=N_COMPONENTS)
+new_data = fa.fit_transform(DATASET.training_features)
 
 report = {}
 labels = []
@@ -69,8 +69,7 @@ if MODE == 'learning':
     train_scores_rp = np.array([])
 
     for i in range(N_REPEAT):
-        if i % 50 == 0:
-            print("{}/{}".format(i, N_REPEAT))
+        print("{}/{}".format(i, N_REPEAT))
         classifier = neural_network.MLPClassifier(
             learning_rate_init=LEARNING_RATE,
             tol=TOLERANCE,
@@ -147,13 +146,13 @@ elif MODE == 'compute_time':
     plt.plot(plot_x, plot_y_fitting_pca)
     plt.legend(['Scoring', 'Fitting', 'Scoring PCA', 'Fitting PCA'])
     plt.show()
-if MODE == 'compare':
+elif MODE == 'compare':
     success = 0
     for i in range(1000):
         if i % 50 == 0:
             print("{}/{}".format(i, 1000))
-        rp = random_projection.GaussianRandomProjection(n_components=N_COMPONENTS)
-        new_data = rp.fit_transform(DATASET.training_features)
+        fa = decomposition.FactorAnalysis(n_components=N_COMPONENTS)
+        new_data = fa.fit_transform(DATASET.training_features)
         kmeans = cluster.KMeans(n_clusters=N_CLUSTERS)
         kmeans.fit(new_data)
         count = {}
